@@ -3394,6 +3394,13 @@
   renderApp();
   applyLanguageUI();
 
+  // Native app: hide the logo splash the moment the first screen is ready (no black gap)
+  (function hideNativeSplash() {
+    const hide = () => { try { window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen && window.Capacitor.Plugins.SplashScreen.hide({ fadeOutDuration: 80 }); } catch (e) {} };
+    requestAnimationFrame(() => requestAnimationFrame(hide));
+    setTimeout(hide, 1500); // safety fallback
+  })();
+
   // Live rate: fetched AFTER first paint so the app opens instantly
   const _afterPaint = window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 1500 })) : (f => setTimeout(f, 600));
   _afterPaint(() => refreshLiveRate());
