@@ -27,7 +27,7 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android
       - run: npx cap sync android
-      - name: Make launch screen same color as app (no gray/black flash)
+      - name: Launch screen shows logo on app color (no blank black)
         run: |
           mkdir -p android/app/src/main/res/values
           cat > android/app/src/main/res/values/ow_colors.xml <<'XML'
@@ -43,7 +43,8 @@ jobs:
           def fix(m):
               head, name, body, tail = m.group(1), m.group(2), m.group(3), m.group(4)
               body = re.sub(r'\s*<item name="android:windowBackground">.*?</item>', '', body)
-              items = '\n        <item name="android:windowBackground">@color/ow_bg</item>'
+              bg = '@drawable/splash' if name.endswith('Launch') else '@color/ow_bg'
+              items = '\n        <item name="android:windowBackground">' + bg + '</item>'
               items += '\n        <item name="android:colorBackground">@color/ow_bg</item>'
               items += '\n        <item name="android:windowSplashScreenBackground">@color/ow_bg</item>'
               if 'SplashScreen' in head:
