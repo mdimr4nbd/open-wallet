@@ -27,14 +27,20 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android
       - run: npx cap sync android
-      - name: Launch screen shows logo on app color (no blank black)
+      - name: Remove splash screen completely
         run: |
-          mkdir -p android/app/src/main/res/values
+          mkdir -p android/app/src/main/res/values android/app/src/main/res/drawable
           cat > android/app/src/main/res/values/ow_colors.xml <<'XML'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
               <color name="ow_bg">#06090e</color>
           </resources>
+          XML
+          cat > android/app/src/main/res/drawable/ow_transparent.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#00000000" />
+          </shape>
           XML
           python3 - <<'PY'
           import re
@@ -43,12 +49,14 @@ jobs:
           def fix(m):
               head, name, body, tail = m.group(1), m.group(2), m.group(3), m.group(4)
               body = re.sub(r'\s*<item name="android:windowBackground">.*?</item>', '', body)
-              bg = '@drawable/splash' if name.endswith('Launch') else '@color/ow_bg'
-              items = '\n        <item name="android:windowBackground">' + bg + '</item>'
+              body = re.sub(r'\s*<item name="android:background">@drawable/splash</item>', '', body)
+              items = '\n        <item name="android:windowBackground">@color/ow_bg</item>'
               items += '\n        <item name="android:colorBackground">@color/ow_bg</item>'
               items += '\n        <item name="android:windowSplashScreenBackground">@color/ow_bg</item>'
+              items += '\n        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ow_transparent</item>'
               if 'SplashScreen' in head:
                   items += '\n        <item name="windowSplashScreenBackground">@color/ow_bg</item>'
+                  items += '\n        <item name="windowSplashScreenAnimatedIcon">@drawable/ow_transparent</item>'
               return head + body + items + '\n    ' + tail
           s = re.sub(r'(<style name="(AppTheme\.NoActionBar(?:Launch)?)"[^>]*>)(.*?)(</style>)', fix, s, flags=re.S)
           open(p, 'w', encoding='utf-8').write(s)
