@@ -1,0 +1,3407 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>হিসাব ওয়ালেট — ডুয়াল কারেন্সি বাজেট ট্র্যাকার</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"></noscript>
+  <style>
+    :root {
+      --bg-main: #06090e;
+      --bg-surface: #0e1522;
+      --bg-card: #131d2e;
+      --bg-card-hover: #19273e;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(16, 185, 129, 0.4);
+
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.15);
+      --teal: #14b8a6;
+      --cyan: #06b6d4;
+      --rose: #f43f5e;
+      --rose-soft: rgba(244, 63, 94, 0.15);
+      --amber: #f59e0b;
+      --purple: #a855f7;
+
+      --text-1: #f8fafc;
+      --text-2: #94a3b8;
+      --text-3: #64748b;
+
+      --safe-bottom: env(safe-area-inset-bottom, 24px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html, body {
+      background-color: var(--bg-main);
+      color: var(--text-1);
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Container for direct mobile/desktop preview */
+    .app-container {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--bg-main);
+      box-shadow: none;
+      padding: 0;
+      margin: 0 auto;
+    }
+
+    /* Top Navigation Header - Always Visible Pinned */
+    .header-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      transform: none;
+      width: 100%;
+      max-width: 100%;
+      z-index: 90;
+      background: rgba(6, 9, 14, 0.98);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25) 0%, rgba(14, 22, 34, 0.85) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--emerald);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .brand-logo svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .brand-info {
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .brand-info h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Brand wordmark */
+    .brand-info h1.brand-wordmark {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      font-family: 'Titan One', 'Arial Black', Impact, 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 23px;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      -webkit-text-stroke: 0.4px currentColor;
+    }
+    .brand-info h1.brand-wordmark span {
+      display: inline;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+    }
+    .brand-info h1.brand-wordmark .b-open { color: #eef2f8; }
+    .brand-info h1.brand-wordmark .b-wallet { color: #34d399; }
+
+    .online-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    .brand-info span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-2);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .header-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cur-symbol-btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.12);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .cur-symbol-btn:active {
+      transform: scale(0.92);
+      background: var(--bg-card);
+    }
+
+    .cur-exchange-icon {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      fill: currentColor;
+      filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+    }
+
+    .icon-action-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25) 0%, rgba(14, 22, 34, 0.85) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+      transition: transform 0.1s;
+    }
+    .icon-action-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+    .icon-action-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Main Scrollable Body */
+    .content-area {
+      flex: 1;
+      padding: 76px 12px calc(90px + var(--safe-bottom)) 12px;
+      overflow-y: auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .content-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Tab Switcher */
+    .tab-page {
+      display: none;
+    }
+    .tab-page.active {
+      display: block;
+      animation: fadeIn 0.1s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate3d(0,6px,0); }
+      to { opacity: 1; transform: translate3d(0,0,0); }
+    }
+
+    /* Consolidated Total Balance Card */
+    .consolidated-card {
+      background: linear-gradient(150deg, #111d2c 0%, #0c1522 60%, #080e18 100%);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 20px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6);
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    .consolidated-card::after {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-top span {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--text-2);
+      text-transform: uppercase;
+    }
+
+    .rate-badge {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--emerald);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 9.5px;
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    .balance-display-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .wallet-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25) 0%, rgba(14, 22, 34, 0.85) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--emerald);
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .wallet-icon-circle svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .primary-sum {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: #ffffff;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+    }
+
+    .donut-center-info strong .cur-unit {
+      display: inline;
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
+      text-transform: none;
+    }
+
+    .primary-sum .cur-unit {
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+    }
+
+    .secondary-sum {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-2);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 20px;
+    }
+
+    .in-out-flow-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .flow-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .flow-badge-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .flow-badge-icon.inflow {
+      background: var(--emerald-soft);
+      color: var(--emerald);
+    }
+
+    .flow-badge-icon.outflow {
+      background: var(--rose-soft);
+      color: var(--rose);
+    }
+
+    .flow-text label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 600;
+    }
+
+    .flow-text strong {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-1);
+    }
+
+    /* Section Titles */
+    .row-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .row-title h2 {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: var(--text-1);
+      text-transform: uppercase;
+    }
+
+    .row-title a {
+      font-size: 12px;
+      color: var(--emerald);
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Horizontal Accounts / Wallets Scroller */
+    .wallets-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      scrollbar-width: none;
+    }
+    .wallets-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .wallet-card-item {
+      min-width: 155px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 14px;
+      flex-shrink: 0;
+      transition: background-color 0.12s, border-color 0.12s, transform 0.12s;
+    }
+    .wallet-card-item:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: var(--bg-card);
+    }
+
+    .wallet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .wallet-icon {
+      font-size: 18px;
+    }
+
+    .wallet-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .wallet-name {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wallet-balance {
+      font-size: 15px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+
+    .wallet-equiv {
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    /* Breakdown Box */
+    .breakdown-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 18px;
+      width: 100%;
+    }
+
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 8px;
+    }
+
+    .donut-circle-wrap {
+      width: 115px;
+      height: 115px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .donut-circle-wrap svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .donut-center-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .donut-center-info span {
+      display: block;
+      font-size: 10px;
+      color: var(--text-3);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .donut-unit {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-3);
+      line-height: 1.1;
+    }
+
+    .donut-center-info strong {
+      display: block;
+      white-space: nowrap;
+      line-height: 1.15;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--emerald);
+    }
+
+    .legend-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .legend-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: var(--text-2);
+    }
+
+    /* Transactions List */
+    .tx-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .tx-row-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.1s, transform 0.1s;
+      cursor: pointer;
+      width: 100%;
+    }
+    .tx-row-item:hover {
+      background: var(--bg-card);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .tx-row-item:active {
+      transform: scale(0.98);
+    }
+
+    .tx-icon-desc {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tx-thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .tx-meta h5 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      color: var(--text-1);
+    }
+
+    .tx-meta span {
+      font-size: 11px;
+      color: var(--text-3);
+      display: block;
+    }
+
+    .tx-amounts {
+      text-align: right;
+    }
+
+    .tx-primary-num {
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .tx-primary-num.exp {
+      color: var(--text-1);
+    }
+
+    .tx-primary-num.inc {
+      color: var(--emerald);
+    }
+
+    .tx-secondary-num {
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+
+    /* Bottom Navigation Bar */
+    .footer-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      transform: none;
+      width: auto;
+      max-width: none;
+      box-sizing: content-box;
+      height: 66px;
+      background: rgba(14, 21, 34, 0.98);
+      border: 0;
+      border-top: 1px solid var(--border-subtle);
+      border-radius: 0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 6px;
+      padding: 0 30px var(--safe-bottom);
+      z-index: 50;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .nav-item-btn {
+      flex: 1;
+      max-width: 72px;
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-3);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color 0.1s;
+    }
+
+    .nav-item-btn.active {
+      color: var(--emerald);
+    }
+
+    .nav-item-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.2;
+    }
+
+    /* Ivy FAB Button */
+    .center-fab-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25) 0%, rgba(14, 22, 34, 0.85) 100%), var(--bg-main);
+      border: 3.5px solid var(--bg-main);
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1.5px rgba(16, 185, 129, 0.4), 0 0 18px rgba(16, 185, 129, 0.3);
+      cursor: pointer;
+      margin: -52px 8px 0 8px;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+      position: relative;
+      z-index: 60;
+      pointer-events: auto;
+    }
+
+    .center-fab-btn svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .center-fab-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* Modal / Bottom Sheet */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      z-index: 9999;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex !important;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 100%;
+      background: var(--bg-surface);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      border: 1px solid var(--border-subtle);
+      border-bottom: none;
+      padding: 22px 20px calc(22px + var(--safe-bottom));
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideSheet 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @keyframes slideSheet {
+      from { transform: translate3d(0,100%,0); }
+      to { transform: translate3d(0,0,0); }
+    }
+
+    .drag-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      margin: 0 auto 18px;
+    }
+
+    .segmented-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-card);
+      padding: 4px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+    }
+
+    .switch-tab {
+      padding: 9px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-2);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background-color 0.12s, border-color 0.12s, transform 0.12s;
+    }
+
+    .switch-tab.active.exp {
+      background: var(--rose);
+      color: #fff;
+    }
+
+    .switch-tab.active.inc {
+      background: var(--emerald);
+      color: #06090e;
+    }
+
+    .form-field {
+      margin-bottom: 14px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: #ffffff;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--emerald);
+    }
+
+    /* Amount Input Card */
+    .amount-field-standard {
+      margin-bottom: 14px;
+    }
+
+    .amount-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 8px 14px 6px;
+      text-align: center;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .amount-card:focus-within {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+    }
+
+    .amount-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: var(--emerald);
+      line-height: 1.2;
+    }
+
+    .amount-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .amount-input-box {
+      flex: 1;
+      min-width: 0;
+      height: 38px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+    }
+
+    .amount-input-box::placeholder {
+      color: var(--text-3);
+      opacity: 0.6;
+    }
+
+    .amount-input-box:focus {
+      outline: none;
+    }
+
+    .amount-input-box::-webkit-outer-spin-button,
+    .amount-input-box::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .amount-input-box {
+      -moz-appearance: textfield;
+    }
+
+    /* Equal Sized DateTime Trigger Boxes */
+    .datetime-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .datetime-btn {
+      width: 100%;
+      height: 48px;
+      background: var(--bg-card);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: 12px;
+      padding: 0 14px;
+      color: var(--text-1);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+      user-select: none;
+    }
+
+    .datetime-btn:hover, .datetime-btn:active {
+      border-color: var(--emerald);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .datetime-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--emerald);
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    /* Custom Theme Date & Time Popups */
+    .custom-picker-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .custom-picker-overlay.show {
+      display: flex !important;
+    }
+
+    .custom-picker-modal {
+      width: 100%;
+      max-width: 320px;
+      background: #0d1522;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.15);
+      animation: modalZoomIn 0.1s ease-out;
+    }
+
+    @keyframes modalZoomIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .picker-head {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 14px 18px;
+    }
+
+    .picker-head .picker-sub {
+      font-size: 11px;
+      color: var(--emerald);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .picker-head .picker-main-text {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-top: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .picker-body {
+      padding: 16px;
+    }
+
+    .cal-month-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--text-1);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .cal-nav-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .cal-grid-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      gap: 4px;
+    }
+
+    .cal-day-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      padding-bottom: 4px;
+    }
+
+    .cal-cell {
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-1);
+      cursor: pointer;
+      transition: background-color 0.1s;
+    }
+
+    .cal-cell:hover {
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .cal-cell.empty {
+      cursor: default;
+      background: transparent !important;
+    }
+
+    .cal-cell.selected {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%) !important;
+      color: #06090e !important;
+      font-weight: 800;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Time Picker Wheel / Clock */
+    .time-picker-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .time-picker-digital {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .time-box-select {
+      background: var(--bg-card);
+      border: 1.5px solid rgba(16, 185, 129, 0.35);
+      border-radius: 14px;
+      padding: 8px 10px;
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+      text-align-last: center;
+      min-width: 82px;
+      width: 82px;
+      height: 54px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+    }
+
+    .time-box-select:focus {
+      border-color: var(--emerald);
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+    }
+
+    .time-box-select option {
+      background: #0d1522;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .ampm-switch-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .ampm-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-3);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ampm-btn.active {
+      background: var(--emerald);
+      color: #06090e;
+      border-color: var(--emerald);
+    }
+
+    .picker-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 10px 16px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .picker-action-btn {
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+    }
+
+    .picker-action-cancel {
+      background: transparent;
+      color: var(--text-3);
+    }
+
+    .picker-action-set {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      color: #06090e;
+    }
+
+    .modal-actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      width: 100%;
+    }
+
+    .action-delete-btn {
+      flex: 1;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      color: var(--rose);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+    }
+
+    .action-delete-btn:active {
+      background: rgba(244, 63, 94, 0.22);
+      transform: scale(0.97);
+    }
+
+    .action-submit-btn {
+      flex: 2;
+      background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.25) 0%, rgba(14, 22, 34, 0.85) 100%), var(--bg-main);
+      color: var(--emerald);
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+      transition: opacity 0.12s ease, transform 0.1s ease;
+    }
+
+    .action-submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Category Quick Select Chips Grid */
+    .cat-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .cat-chip-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      padding: 5px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      cursor: pointer;
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+      color: var(--text-2);
+    }
+
+    .cat-chip-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-1);
+    }
+
+    .cat-chip-btn.selected {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: var(--emerald);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .cat-chip-icon {
+      font-size: 14px;
+    }
+
+    .cat-chip-name {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .cat-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .cat-label-row label { margin-bottom: 0; }
+    .cat-edit-link { background: none; border: none; color: var(--emerald); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
+    .cat-manage-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; margin-bottom: 5px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; cursor: pointer; }
+    .cat-manage-icon { font-size: 17px; width: 24px; text-align: center; }
+    .cat-manage-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .cat-manage-pen { color: var(--text-3); font-size: 13px; }
+    .cat-manage-del { width: 22px; height: 22px; font-size: 11px; border-radius: 50%; border: none; background: rgba(244, 63, 94, 0.18); color: var(--rose); font-size: 12px; font-weight: 800; cursor: pointer; }
+    .cat-chip-btn { position: relative; }
+    .cat-chip-btn.tool { border-style: dashed; }
+    .cat-chip-btn.editing { border-style: dashed; border-color: var(--emerald); }
+    .cat-chip-del {
+      position: absolute;
+      top: -5px;
+      right: -3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--rose);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 16px;
+      text-align: center;
+    }
+
+    .cat-manage-card {
+      padding: 12px 16px calc(12px + var(--safe-bottom));
+    }
+    .cat-manage-card .drag-handle {
+      margin-bottom: 10px;
+    }
+    .cat-manage-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-2);
+      margin-bottom: 8px;
+    }
+    .cat-actions {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      gap: 10px;
+      padding-top: 8px;
+      background: var(--bg-surface);
+    }
+    .cat-actions .action-submit-btn,
+    .cat-actions .action-secondary-btn {
+      flex: 1;
+      padding: 11px;
+      font-size: 14px;
+    }
+    .action-secondary-btn {
+      background: transparent;
+      border: 1.5px dashed rgba(16, 185, 129, 0.5);
+      color: var(--emerald);
+      font-weight: 700;
+      border-radius: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .action-secondary-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Settings cards */
+    .settings-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+      width: 100%;
+    }
+    .sc-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .sc-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-1);
+      line-height: 1.3;
+    }
+    .sc-current {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--emerald);
+      margin-top: 4px;
+    }
+    .sc-desc {
+      font-size: 12.5px;
+      color: var(--text-3);
+      margin: 6px 0 14px;
+      line-height: 1.4;
+    }
+    .sc-chip-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      background: var(--emerald-soft);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--emerald);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .sc-chip-btn:active { transform: scale(0.96); }
+    .sc-chip-btn.busy { opacity: 0.7; pointer-events: none; }
+    .sc-chip-btn.busy svg { animation: scSpin 0.8s linear infinite; }
+    @keyframes scSpin { to { transform: rotate(360deg); } }
+    .sc-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .float-field {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+    }
+    .float-label {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      padding: 0 6px;
+      background: var(--bg-surface);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      z-index: 1;
+    }
+    .float-field:focus-within .float-label { color: var(--emerald); }
+    .float-input {
+      width: 100%;
+      height: 52px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 0 14px;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      -moz-appearance: textfield;
+    }
+    .float-input:focus { outline: none; border-color: var(--emerald); }
+    .float-input::-webkit-outer-spin-button,
+    .float-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .sc-save-btn {
+      flex: none;
+      min-width: 82px;
+      padding: 0 18px;
+      font-size: 14px;
+    }
+    .sc-outline-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px 14px;
+      margin-top: 10px;
+      border-radius: 14px;
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--emerald);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .sc-outline-btn.blue {
+      background: rgba(6, 182, 212, 0.06);
+      border-color: rgba(6, 182, 212, 0.35);
+      color: var(--cyan);
+    }
+    .sc-outline-btn:active { transform: scale(0.98); }
+    .sc-reset-btn {
+      width: 100%;
+      padding: 15px 14px;
+      border-radius: 14px;
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: var(--rose);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .sc-reset-btn:active { transform: scale(0.98); }
+    .restore-text {
+      width: 100%;
+      min-height: 130px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      resize: none;
+    }
+    .restore-text:focus { outline: none; border-color: var(--emerald); }
+    .restore-msg {
+      min-height: 18px;
+      margin: 6px 0 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--rose);
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--emerald);
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+  
+    /* ===== Performance / smoothness boost ===== */
+    .modal-overlay.open, .custom-picker-overlay.show { animation: overlayIn 0.1s ease-out; }
+    @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+    .header-bar, .footer-nav { will-change: transform; transform: translateZ(0); }
+    .content-area { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+    .wallets-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+    button, a, .tx-row-item, .wallet-card-item, .cat-chip-btn, .nav-item-btn, .cal-cell { touch-action: manipulation; }
+    .tx-row-item, .wallet-card-item { contain: layout paint; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+
+<div class="app-container">
+  
+  <!-- Toast Notification -->
+  <div id="toast" class="toast-msg">আপডেট হয়েছে</div>
+
+  <!-- Top Navigation Header -->
+  <header class="header-bar">
+    <div class="brand-wrap">
+      <div class="brand-logo">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/>
+        </svg>
+      </div>
+      <div class="brand-info">
+        <h1 id="brandName">হিসাব ওয়ালেট</h1>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="icon-action-btn" onclick="navigateToTab('settings')" title="সেটিংস">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Scrollable App Body -->
+  <main class="content-area">
+
+    <!-- HOME TAB -->
+    <div id="tab-home" class="tab-page active">
+      
+      <!-- Consolidated Balance Card -->
+      <div class="consolidated-card">
+        <div class="card-top">
+          <span>মোট সমন্বিত ব্যালেন্স</span>
+          <div class="rate-badge" id="cardFxPill">১ রিয়াল = ৩৩.০৩ টাকা</div>
+        </div>
+        <div class="balance-display-wrap">
+          <div class="wallet-icon-circle">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3"/>
+            </svg>
+          </div>
+          <div class="primary-sum" id="totalPrimary">৪,৫৮০.০০<span class="cur-unit">&nbsp;&nbsp;রিয়াল</span></div>
+        </div>
+        <div class="secondary-sum" id="totalSecondary">সমপরিমাণ: ১৪৯,৩০৮.০০&nbsp;&nbsp;৳</div>
+
+        <div class="in-out-flow-row">
+          <div class="flow-pill">
+            <div class="flow-badge-icon inflow">↓</div>
+            <div class="flow-text">
+              <label>চলতি মাসের আয়</label>
+              <strong id="inflowValue">+৫,০০০.০০ রিয়াল</strong>
+            </div>
+          </div>
+          <div class="flow-pill">
+            <div class="flow-badge-icon outflow">↑</div>
+            <div class="flow-text">
+              <label>চলতি মাসের ব্যয়</label>
+              <strong id="outflowValue">-৪২০.০০ রিয়াল</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expense Breakdown -->
+      <div class="breakdown-box">
+        <div class="row-title" style="margin-bottom: 4px;">
+          <h2>খরচের বিবরণ</h2>
+          <a onclick="navigateToTab('analytics')">সম্পূর্ণ বিশ্লেষণ →</a>
+        </div>
+        <div class="donut-layout">
+          <div class="donut-circle-wrap">
+            <svg viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#172335" stroke-width="4.5"></circle>
+              <circle id="ringSeg1" cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="4.5" stroke-dasharray="45 55" stroke-dashoffset="0"></circle>
+              <circle id="ringSeg2" cx="21" cy="21" r="15.915" fill="transparent" stroke="#06b6d4" stroke-width="4.5" stroke-dasharray="35 65" stroke-dashoffset="-45"></circle>
+              <circle id="ringSeg3" cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="4.5" stroke-dasharray="20 80" stroke-dashoffset="-80"></circle>
+            </svg>
+            <div class="donut-center-info">
+              <span>মোট ব্যয়</span>
+              <strong id="donutCenterTotal">৪২০.০০ রিয়াল</strong>
+            </div>
+          </div>
+          <div class="legend-list" id="homeBreakdownLegend">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="row-title">
+        <h2>সাম্প্রতিক লেনদেন</h2>
+        <a onclick="navigateToTab('transactions')">সবগুলো দেখুন →</a>
+      </div>
+      <div class="tx-feed" id="homeTxFeed">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+
+    <!-- ALL TRANSACTIONS (HISTORY) TAB -->
+    <div id="tab-transactions" class="tab-page">
+      <div class="row-title" style="margin-top: 6px;">
+        <h2>সকল লেনদেনের ইতিহাস</h2>
+        <span style="font-size:12px; color:var(--text-3);" id="fullTxCount">০টি লেনদেন</span>
+      </div>
+
+      <!-- Filter chips -->
+      <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin: 12px 0 16px; scrollbar-width:none;">
+        <button class="switch-tab active inc" id="filter-all" style="padding:6px 14px; font-size:12px; border-radius:20px;" onclick="filterTransactions('all')">সকল</button>
+        <button class="switch-tab" id="filter-expense" style="padding:6px 14px; font-size:12px; border-radius:20px; background:var(--bg-card); color:var(--text-2);" onclick="filterTransactions('expense')">খরচ</button>
+        <button class="switch-tab" id="filter-income" style="padding:6px 14px; font-size:12px; border-radius:20px; background:var(--bg-card); color:var(--text-2);" onclick="filterTransactions('income')">আয়</button>
+      </div>
+
+      <!-- Search input -->
+      <div class="form-field" style="margin-bottom:14px;">
+        <input type="text" id="txSearchInput" class="form-input" placeholder="🔍 লেনদেন খুঁজুন..." oninput="renderFullHistory()">
+      </div>
+
+      <div class="tx-feed" id="fullTransactionsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div id="tab-analytics" class="tab-page">
+      <div class="breakdown-box" style="margin-top: 6px;">
+        <h2>খরচের বিস্তারিত পরিসংখ্যান</h2>
+        <p style="font-size:12px; color:var(--text-3); margin-top:4px;">রিয়াল এবং টাকার সমন্বিত বিশ্লেষণ</p>
+        <div id="analyticsProgressBars" style="margin-top:20px; display:flex; flex-direction:column; gap:14px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" class="tab-page">
+
+      <!-- Language -->
+      <div class="settings-card" style="margin-top: 6px;">
+        <h3 class="sc-title" data-tr="language" style="margin-bottom:12px;">ভাষা</h3>
+        <div class="segmented-switch" style="margin-bottom:0;">
+          <button type="button" class="switch-tab active inc" id="langBtnEn" onclick="setLanguage('en')">English</button>
+          <button type="button" class="switch-tab" id="langBtnBn" onclick="setLanguage('bn')">বাংলা</button>
+        </div>
+      </div>
+
+      <!-- Exchange rate -->
+      <div class="settings-card">
+        <div class="sc-head">
+          <div>
+            <h3 class="sc-title" data-tr="rateTitle">বিনিময় হার (SAR ⇄ BDT)</h3>
+            <div class="sc-current" id="rateCurrentLine">বর্তমানে: ১ SAR = ৩৩.০৩ BDT</div>
+          </div>
+          <button type="button" class="sc-chip-btn" id="btnLiveRate" onclick="refreshLiveRateNow()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 3 21 9 15 9"/></svg>
+            <span id="liveRateLabel" data-tr="liveRate">লাইভ রেট</span>
+          </button>
+        </div>
+        <div class="sc-row">
+          <div class="float-field">
+            <span class="float-label" data-tr="rateFieldLabel">১ SAR = কত BDT</span>
+            <input type="number" id="settingRateInput" class="float-input" step="0.01" inputmode="decimal" value="33.03" onkeydown="if (event.key === 'Enter') saveRateSetting()">
+          </div>
+          <button type="button" class="action-submit-btn sc-save-btn" id="btnSaveRate" onclick="saveRateSetting()" data-tr="save">সেভ</button>
+        </div>
+      </div>
+
+      <!-- Backup & restore -->
+      <div class="settings-card">
+        <h3 class="sc-title" data-tr="backupTitle">ডেটা ব্যাকআপ ও রিস্টোর</h3>
+        <p class="sc-desc" data-tr="backupDesc">আপনার হিসাবের ডেটা সহজে ব্যাকআপ ও রিস্টোর করুন</p>
+        <button type="button" class="sc-outline-btn" onclick="shareBackupJSON()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span id="shareBackupLabel" data-tr="shareBackup">JSON ব্যাকআপ শেয়ার / কপি করুন</span>
+        </button>
+        <button type="button" class="sc-outline-btn blue" onclick="openRestoreModal()">
+          <span id="restoreBtnLabel" data-tr="restoreBtn">JSON ব্যাকআপ থেকে রিস্টোর করুন</span>
+        </button>
+      </div>
+
+      <!-- Reset -->
+      <div class="settings-card">
+        <h3 class="sc-title" data-tr="resetTitle">সব ডেটা রিসেট</h3>
+        <p class="sc-desc" data-tr="resetDesc">সকল লেনদেন মুছে যাবে এবং ব্যালেন্স শূন্য হবে</p>
+        <button type="button" class="sc-reset-btn" id="btnResetData" onclick="resetToDefaultData()" data-tr="reset">রিসেট করুন</button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="footer-nav">
+    <button class="nav-item-btn active" id="btn-tab-home" onclick="navigateToTab('home')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+      হোম
+    </button>
+    <span class="nav-item-btn" style="visibility:hidden;pointer-events:none;" aria-hidden="true"></span>
+    
+    <!-- Floating Quick Add Button -->
+    <button class="center-fab-btn" onclick="openCreateModal()" title="নতুন লেনদেন যোগ করুন">
+      <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    </button>
+
+    <span class="nav-item-btn" style="visibility:hidden;pointer-events:none;" aria-hidden="true"></span>
+    <button class="nav-item-btn" id="btn-tab-transactions" onclick="navigateToTab('transactions')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/></svg>
+      লেনদেন
+    </button>
+  </nav>
+
+  <!-- Create Transaction Bottom Sheet Modal -->
+  <div class="modal-overlay" id="addTxModal" onclick="handleModalOutsideClick(event)">
+    <div class="modal-card">
+      <div class="drag-handle"></div>
+
+      <div class="segmented-switch">
+        <button class="switch-tab" id="btnTypeInc" onclick="setTxType('income')">আয়</button>
+        <button class="switch-tab active exp" id="btnTypeExp" onclick="setTxType('expense')">খরচ</button>
+      </div>
+
+      <!-- ১. টাকার পরিমাণ (আগের মতো কমপ্যাক্ট সাইজ ও স্ট্যান্ডার্ড উচ্চতা) -->
+      <form id="amountForm" action="javascript:void(0);" onsubmit="return dismissMobileKeyboard(event);">
+        <div class="form-field amount-field-standard">
+          <div class="amount-card">
+            <div class="amount-title">টাকার পরিমাণ</div>
+            <div class="amount-row">
+              <input 
+                type="number" 
+                id="txAmountInput" 
+                class="amount-input-box" 
+                placeholder="০.০০" 
+                step="0.01" 
+                inputmode="decimal" 
+                enterkeyhint="done"
+                onkeydown="checkEnterKey(event)"
+              >
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- ২. তারিখ ও সময় (থিমের রঙে সজ্জিত ও একই সাইজ) -->
+      <div class="form-field">
+        <label>তারিখ ও সময়</label>
+        <div class="datetime-row">
+          <button type="button" class="datetime-btn" id="btnTriggerDate" onclick="openCustomDatePicker()">
+            <span id="dateDisplayLabel">--/--/----</span>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></svg>
+          </button>
+          <button type="button" class="datetime-btn" id="btnTriggerTime" onclick="openCustomTimePicker()">
+            <span id="timeDisplayLabel">05:31 PM</span>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+          </button>
+        </div>
+        <input type="hidden" id="txDateInput" value="2026-11-02">
+        <input type="hidden" id="txTimeInput" value="17:31">
+      </div>
+
+      <!-- ৩. ক্যাটাগরি (সরাসরি ছোট সিম্বল আকারে শো থাকবে) -->
+      <div class="form-field" id="wrapCategory">
+        <label>ক্যাটাগরি নির্বাচন করুন</label>
+        <div class="cat-chips-grid" id="categoryChipsContainer">
+          <!-- Rendered dynamically by JS -->
+        </div>
+        <input type="hidden" id="txCategory" value="খাবার">
+      </div>
+
+      <!-- বিবরণ / নোট (ঐচ্ছিক) -->
+      <div class="form-field" style="margin-top: 14px;">
+        <label>বিবরণ / নোট <span style="font-size:11px; color:var(--text-3);">(ঐচ্ছিক)</span></label>
+        <input type="text" id="txNoteInput" class="form-input" placeholder="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+
+      <!-- সংরক্ষণ ও মুছে ফেলার বাটন (পাশাপাশি: বামে ডিলিট, ডানে সেভ) -->
+      <div class="modal-actions-row">
+        <button type="button" class="action-delete-btn" id="btnDeleteTx" onclick="deleteCurrentTransaction()">মুছে ফেলুন</button>
+        <button type="button" class="action-submit-btn" id="btnSubmitTx" onclick="saveNewTransaction()">রেকর্ড সংরক্ষণ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Manager (editable page) -->
+  <div class="modal-overlay" id="catManageModal" onclick="if (event.target === this) closeCatManager()">
+    <div class="modal-card cat-manage-card">
+      <div class="drag-handle"></div>
+      <div class="cat-manage-title">ক্যাটাগরি এডিট করুন</div>
+      <div id="catManageList"></div>
+      <div class="cat-actions">
+        <button type="button" class="action-secondary-btn" onclick="openCatEditor(-1)">＋ নতুন ক্যাটাগরি</button>
+        <button type="button" class="action-submit-btn" onclick="closeCatManager()">সংরক্ষণ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restore Backup Modal -->
+  <div class="modal-overlay" id="restoreModal" onclick="if (event.target === this) closeRestoreModal()">
+    <div class="modal-card cat-manage-card">
+      <div class="drag-handle"></div>
+      <div class="cat-manage-title" data-tr="restoreTitle">ব্যাকআপ রিস্টোর</div>
+      <p class="sc-desc" style="margin-top:0;" data-tr="restoreHint">ব্যাকআপ JSON নিচে পেস্ট করুন, অথবা ফাইল বাছাই করুন</p>
+      <textarea id="restoreText" class="restore-text" rows="6" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+      <div id="restoreMsg" class="restore-msg"></div>
+      <div class="cat-actions">
+        <button type="button" class="action-secondary-btn" onclick="document.getElementById('importFileInput').click()" data-tr="chooseFile">ফাইল বাছাই করুন</button>
+        <button type="button" class="action-submit-btn" onclick="restoreFromText()" data-tr="restoreNow">রিস্টোর করুন</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="importFileInput" accept=".json,.txt,application/json,text/plain" style="display:none" onchange="importDataJSON(event)">
+
+  <!-- Category Editor Modal -->
+  <div class="modal-overlay" id="catEditModal" onclick="if (event.target === this) closeCatEditor()">
+    <div class="modal-card">
+      <div class="drag-handle"></div>
+      <div class="form-field">
+        <label id="catEditTitle">ক্যাটাগরি</label>
+        <input type="text" id="catEditName" class="form-input" placeholder="নাম" maxlength="24" autocomplete="off">
+      </div>
+      <div class="form-field">
+        <label>আইকন (ইমোজি)</label>
+        <input type="text" id="catEditIcon" class="form-input" placeholder="🏷️" maxlength="12" autocomplete="off">
+      </div>
+      <div class="actions-row">
+        <button type="button" class="action-submit-btn" onclick="saveCatEditor()">সংরক্ষণ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Themed Date Picker Modal -->
+  <div class="custom-picker-overlay" id="customDateModal" onclick="closeCustomDateModal(event)">
+    <div class="custom-picker-modal" onclick="event.stopPropagation()">
+      <div class="picker-head">
+        <div class="picker-sub" id="calYearHeading">2026</div>
+        <div class="picker-main-text" id="calMainHeading">Mon, Nov 2</div>
+      </div>
+      <div class="picker-body">
+        <div class="cal-month-nav">
+          <button type="button" class="cal-nav-btn" onclick="navPickerMonth(-1)">‹</button>
+          <span id="calCurrentMonthLabel">November 2026</span>
+          <button type="button" class="cal-nav-btn" onclick="navPickerMonth(1)">›</button>
+        </div>
+        <div class="cal-grid-days">
+          <div class="cal-day-label">S</div>
+          <div class="cal-day-label">M</div>
+          <div class="cal-day-label">T</div>
+          <div class="cal-day-label">W</div>
+          <div class="cal-day-label">T</div>
+          <div class="cal-day-label">F</div>
+          <div class="cal-day-label">S</div>
+        </div>
+        <div class="cal-grid-days" id="calDaysGrid" style="margin-top:4px;">
+          <!-- Days rendered dynamically -->
+        </div>
+      </div>
+      <div class="picker-actions">
+        <button type="button" class="picker-action-btn picker-action-cancel" onclick="closeCustomDateModal()">Cancel</button>
+        <button type="button" class="picker-action-btn picker-action-set" onclick="applyCustomDate()">Set</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Themed Time Picker Modal -->
+  <div class="custom-picker-overlay" id="customTimeModal" onclick="closeCustomTimeModal(event)">
+    <div class="custom-picker-modal" onclick="event.stopPropagation()">
+      <div class="picker-head">
+        <div class="picker-sub">সময় নির্বাচন</div>
+        <div class="picker-main-text" id="timeHeaderPreview">05:31 PM</div>
+      </div>
+      <div class="picker-body time-picker-content">
+        <div class="time-picker-digital">
+          <select id="timeHourSelect" class="time-box-select" onchange="updateTimePreview()">
+            <option value="01">01</option>
+            <option value="02">02</option>
+            <option value="03">03</option>
+            <option value="04">04</option>
+            <option value="05" selected>05</option>
+            <option value="06">06</option>
+            <option value="07">07</option>
+            <option value="08">08</option>
+            <option value="09">09</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <span style="font-size:24px; font-weight:800; color:var(--emerald);">:</span>
+          <select id="timeMinSelect" class="time-box-select" onchange="updateTimePreview()">
+            <!-- Generated dynamically -->
+          </select>
+          <div class="ampm-switch-wrap">
+            <button type="button" id="btnAm" class="ampm-btn" onclick="setTimeAmPm('AM')">AM</button>
+            <button type="button" id="btnPm" class="ampm-btn active" onclick="setTimeAmPm('PM')">PM</button>
+          </div>
+        </div>
+      </div>
+      <div class="picker-actions">
+        <button type="button" class="picker-action-btn picker-action-cancel" onclick="closeCustomTimeModal()">Cancel</button>
+        <button type="button" class="picker-action-btn picker-action-set" onclick="applyCustomTime()">Set</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Initial Seed Data (SAR and BDT)
+  const INITIAL_SEED = {
+    exchangeRate: 33.03, // 1 SAR = 33.03 BDT (live rate overwrites this)
+    primaryCurrency: 'SAR',
+    accounts: [
+      { id: 'acc-sar', name: 'Al Rajhi SAR Card', currency: 'SAR', balance: 0, icon: '💳' },
+      { id: 'acc-bdt', name: 'City Bank BDT', currency: 'BDT', balance: 0, icon: '🏦' },
+      { id: 'acc-csh', name: 'ক্যাশ ওয়ালেট', currency: 'SAR', balance: 0, icon: '💵' }
+    ],
+    transactions: []
+  };
+
+  // Saudi riyal sign (U+20C1); falls back to "SAR" if the device font lacks the glyph
+  const SAR_SYM = (() => {
+    try {
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = '16px sans-serif';
+      const w = c.measureText('\u20C1').width;
+      const tofu = c.measureText('\uFFFF').width;
+      const blank = c.measureText('\uE000').width;
+      if (w > 0 && w !== tofu && w !== blank) return '\u20C1';
+    } catch (e) {}
+    return 'SAR';
+  })();
+
+  // State Management with LocalStorage
+  let appState = null;
+  try {
+    const cached = localStorage.getItem('hisab_wallet_sar_bdt_v1');
+    appState = cached ? JSON.parse(cached) : INITIAL_SEED;
+    if (appState && (appState.exchangeRate === 32.6 || !(appState.exchangeRate >= 10 && appState.exchangeRate <= 100))) appState.exchangeRate = 33.03;
+  } catch (e) {
+    appState = INITIAL_SEED;
+  }
+
+  // ===== Language (English / Bangla) =====
+  const BN_TITLE = document.title;
+  if (appState && appState.lang !== 'bn') appState.lang = 'en';
+  function lang() { return appState && appState.lang === 'bn' ? 'bn' : 'en'; }
+  function numLoc() { return lang() === 'bn' ? 'bn-BD' : 'en-US'; }
+
+  const TR = {
+    en: {
+      unitSAR: 'SAR', unitBDT: 'BDT', equiv: 'Equivalent:',
+      txCount: n => `${n} ${n === 1 ? 'transaction' : 'transactions'}`,
+      noTx: 'No transactions found', noTxYet: 'No transactions yet',
+      income: 'Income', expense: 'Expense',
+      saveRecord: 'Save record', saveChanges: 'Save changes',
+      invalidAmount: 'Please enter a valid amount',
+      invalidBackup: 'Invalid backup file', readError: 'Could not read the JSON file',
+      resetConfirm: 'Sure? Tap again to erase all data', reset: 'Reset',
+      newCategory: 'New category', editCategory: 'Edit category', more: 'More',
+      language: 'Language', rateTitle: 'Exchange Rate (SAR ⇄ BDT)', liveRate: 'Live rate', liveLoading: 'Updating…',
+      liveDone: 'Updated', liveFail: 'No connection', rateFieldLabel: '1 SAR = ? BDT', save: 'Save', saved: 'Saved',
+      badRate: 'Invalid rate', currently: 'Currently:', backupTitle: 'Data Backup & Restore',
+      backupDesc: 'Easily back up and restore your wallet data', shareBackup: 'Share / Copy JSON backup', copied: 'Copied!',
+      restoreBtn: 'Restore from JSON backup', resetTitle: 'Reset All Data',
+      resetDesc: 'All transactions will be deleted and balances reset to zero',
+      restoreTitle: 'Restore backup', restoreHint: 'Paste your backup JSON below, or choose a file',
+      chooseFile: 'Choose file', restoreNow: 'Restore', restored: 'Restored!', emptyBackup: 'Paste the backup JSON first'
+    },
+    bn: {
+      unitSAR: 'রিয়াল', unitBDT: 'টাকা', equiv: 'সমপরিমাণ:',
+      txCount: n => `${n}টি লেনদেন`,
+      noTx: 'কোনো লেনদেন পাওয়া যায়নি', noTxYet: 'এখনো কোনো লেনদেন যোগ করা হয়নি',
+      income: 'আয়', expense: 'খরচ',
+      saveRecord: 'রেকর্ড সংরক্ষণ করুন', saveChanges: 'পরিবর্তন সংরক্ষণ করুন',
+      invalidAmount: 'দয়া করে সঠিক টাকার পরিমাণ লিখুন',
+      invalidBackup: 'অকার্যকর ব্যাকআপ ফাইল', readError: 'JSON ফাইল পড়তে সমস্যা হয়েছে',
+      resetConfirm: 'নিশ্চিত? আবার ক্লিক করলে সব ডেটা মুছে যাবে', reset: 'রিসেট করুন',
+      newCategory: 'নতুন ক্যাটাগরি', editCategory: 'ক্যাটাগরি এডিট করুন', more: 'অন্যান্য',
+      language: 'ভাষা', rateTitle: 'বিনিময় হার (SAR ⇄ BDT)', liveRate: 'লাইভ রেট', liveLoading: 'আপডেট হচ্ছে…',
+      liveDone: 'আপডেট হয়েছে', liveFail: 'ইন্টারনেট নেই', rateFieldLabel: '১ SAR = কত BDT', save: 'সেভ', saved: 'সেভ হয়েছে',
+      badRate: 'ভুল রেট', currently: 'বর্তমানে:', backupTitle: 'ডেটা ব্যাকআপ ও রিস্টোর',
+      backupDesc: 'আপনার হিসাবের ডেটা সহজে ব্যাকআপ ও রিস্টোর করুন', shareBackup: 'JSON ব্যাকআপ শেয়ার / কপি করুন', copied: 'কপি হয়েছে!',
+      restoreBtn: 'JSON ব্যাকআপ থেকে রিস্টোর করুন', resetTitle: 'সব ডেটা রিসেট',
+      resetDesc: 'সকল লেনদেন মুছে যাবে এবং ব্যালেন্স শূন্য হবে',
+      restoreTitle: 'ব্যাকআপ রিস্টোর', restoreHint: 'ব্যাকআপ JSON নিচে পেস্ট করুন, অথবা ফাইল বাছাই করুন',
+      chooseFile: 'ফাইল বাছাই করুন', restoreNow: 'রিস্টোর করুন', restored: 'রিস্টোর হয়েছে!', emptyBackup: 'আগে ব্যাকআপ JSON পেস্ট করুন'
+    }
+  };
+  function tr(key, arg) {
+    const v = TR[lang()][key];
+    return typeof v === 'function' ? v(arg) : v;
+  }
+
+  // Default categories are stored with their Bangla names; show English labels in English mode
+  const CAT_EN = {
+    'খাবার': 'Food', 'মুদি বাজার': 'Groceries', 'প্রযুক্তি': 'Tech', 'বিল': 'Bills',
+    'শপিং': 'Shopping', 'ভ্রমণ': 'Travel', 'চিকিৎসা': 'Health', 'বেতন': 'Salary', 'অন্যান্য': 'Other'
+  };
+  const CAT_EN_N = {};
+  Object.keys(CAT_EN).forEach(k => { CAT_EN_N[k.normalize('NFC')] = CAT_EN[k]; });
+  function catLabel(name) {
+    if (lang() === 'en' && name) {
+      const v = CAT_EN_N[String(name).normalize('NFC')];
+      if (v) return v;
+    }
+    return name;
+  }
+
+  // Static page text (Bangla source -> English)
+  const STATIC_EN = {
+    'আপডেট হয়েছে': 'Updated',
+    'সেটিংস': 'Settings',
+    'মোট সমন্বিত ব্যালেন্স': 'Total Balance',
+    'চলতি মাসের আয়': 'Income this month',
+    'চলতি মাসের ব্যয়': 'Expenses this month',
+    'খরচের বিবরণ': 'Expense Breakdown',
+    'সম্পূর্ণ বিশ্লেষণ →': 'Full analysis →',
+    'মোট ব্যয়': 'Total spent',
+    'সাম্প্রতিক লেনদেন': 'Recent Transactions',
+    'সবগুলো দেখুন →': 'View all →',
+    'সকল লেনদেনের ইতিহাস': 'Transaction History',
+    'সকল': 'All',
+    'খরচ': 'Expense',
+    'আয়': 'Income',
+    '🔍 লেনদেন খুঁজুন...': '🔍 Search transactions...',
+    'খরচের বিস্তারিত পরিসংখ্যান': 'Expense Statistics',
+    'রিয়াল এবং টাকার সমন্বিত বিশ্লেষণ': 'Combined analysis in SAR and BDT',
+    'কারেন্সি ও ডেটা ম্যানেজমেন্ট': 'Currency & Data',
+    'ভাষা': 'Language',
+    'বিনিময় হার (১ রিয়াল = কত টাকা)': 'Exchange rate (1 SAR = ? BDT)',
+    'ডেটা ব্যাকআপ (JSON)': 'Data backup (JSON)',
+    'ব্যাকআপ JSON ফাইল ডাউনলোড': 'Download JSON backup',
+    'ফাইল থেকে রিস্টোর করুন': 'Restore from file',
+    'রিসেট করুন': 'Reset',
+    'হোম': 'Home',
+    'লেনদেন': 'Transactions',
+    'নতুন লেনদেন যোগ করুন': 'Add new transaction',
+    'টাকার পরিমাণ': 'Amount',
+    '০.০০': '0.00',
+    'তারিখ ও সময়': 'Date & Time',
+    'ক্যাটাগরি নির্বাচন করুন': 'Select category',
+    'বিবরণ / নোট': 'Description / Note',
+    '(ঐচ্ছিক)': '(optional)',
+    'মুছে ফেলুন': 'Delete',
+    'রেকর্ড সংরক্ষণ করুন': 'Save record',
+    'ক্যাটাগরি এডিট করুন': 'Edit categories',
+    '＋ নতুন ক্যাটাগরি': '+ New category',
+    'সংরক্ষণ করুন': 'Save',
+    'ক্যাটাগরি': 'Category',
+    'নাম': 'Name',
+    'আইকন (ইমোজি)': 'Icon (emoji)',
+    'সময় নির্বাচন': 'Select time'
+  };
+  const STATIC_EN_N = {};
+  Object.keys(STATIC_EN).forEach(k => { STATIC_EN_N[k.normalize('NFC')] = STATIC_EN[k]; });
+  const I18N_TEXT = new Map();
+  const I18N_ATTR = new Map();
+
+  function applyStaticI18n() {
+    if (lang() !== 'en') {
+      I18N_TEXT.forEach((orig, node) => { if (node.isConnected) node.nodeValue = orig; });
+      I18N_TEXT.clear();
+      I18N_ATTR.forEach((orig, el) => { Object.keys(orig).forEach(a => el.setAttribute(a, orig[a])); });
+      I18N_ATTR.clear();
+      return;
+    }
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const p = node.parentNode;
+      if (!p || p.nodeName === 'SCRIPT' || p.nodeName === 'STYLE') return;
+      const raw = node.nodeValue;
+      const trimmed = raw.trim();
+      const eng = trimmed && STATIC_EN_N[trimmed.normalize('NFC')];
+      if (eng) {
+        if (!I18N_TEXT.has(node)) I18N_TEXT.set(node, raw);
+        node.nodeValue = raw.replace(trimmed, () => eng);
+      }
+    });
+    document.querySelectorAll('[placeholder],[title]').forEach(el => {
+      ['placeholder', 'title'].forEach(a => {
+        const v = el.getAttribute(a);
+        const eng = v && STATIC_EN_N[v.trim().normalize('NFC')];
+        if (eng) {
+          const saved = I18N_ATTR.get(el) || {};
+          if (!(a in saved)) saved[a] = v;
+          I18N_ATTR.set(el, saved);
+          el.setAttribute(a, eng);
+        }
+      });
+    });
+  }
+
+  function applyDataTr() {
+    document.querySelectorAll('[data-tr]').forEach(el => { el.textContent = tr(el.getAttribute('data-tr')); });
+  }
+
+  function flashLabel(id, key, baseKey, ms) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = tr(key);
+    clearTimeout(el._flashTimer);
+    el._flashTimer = setTimeout(() => { el.textContent = tr(baseKey); }, ms || 1800);
+  }
+
+  const BN_BRAND = document.getElementById('brandName').textContent;
+  function applyBrand() {
+    const h = document.getElementById('brandName');
+    if (!h) return;
+    if (lang() === 'en') {
+      h.className = 'brand-wordmark';
+      h.innerHTML = '<span class="b-open">OPEN</span><span class="b-wallet">WALLET</span>';
+    } else {
+      h.className = '';
+      h.textContent = BN_BRAND;
+    }
+  }
+
+  function applyLanguageUI() {
+    document.documentElement.lang = lang();
+    applyDataTr();
+    applyBrand();
+    document.title = lang() === 'en' ? 'OPEN WALLET — Dual Currency Budget Tracker' : BN_TITLE;
+    applyStaticI18n();
+    const en = document.getElementById('langBtnEn');
+    const bn = document.getElementById('langBtnBn');
+    if (en) en.className = 'switch-tab' + (lang() === 'en' ? ' active inc' : '');
+    if (bn) bn.className = 'switch-tab' + (lang() === 'bn' ? ' active inc' : '');
+  }
+
+  function setLanguage(l) {
+    appState.lang = l === 'bn' ? 'bn' : 'en';
+    applyLanguageUI();
+    persist();
+  }
+  window.setLanguage = setLanguage;
+
+  let activeTxType = 'expense';
+  let activeHistoryFilter = 'all';
+  let editingTxId = null;
+
+  // Custom DateTime Picker State
+  let pickerCurrentYear = 2026;
+  let pickerCurrentMonth = 10; // 0-based: 10 = Nov
+  let pickerSelectedDate = new Date(2026, 10, 2);
+  let pickerHour = '05';
+  let pickerMinute = '26';
+  let pickerAmPm = 'PM';
+
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  function initTimeMinuteOptions() {
+    const sel = document.getElementById('timeMinSelect');
+    if (!sel) return;
+    if (sel.children.length === 60) return;
+    let html = '';
+    for (let i = 0; i < 60; i += 1) {
+      const val = String(i).padStart(2, '0');
+      html += `<option value="${val}">${val}</option>`;
+    }
+    sel.innerHTML = html;
+  }
+
+  function openCustomDatePicker() {
+    const modal = document.getElementById('customDateModal');
+    if (modal) {
+      modal.classList.add('show');
+      modal.style.display = 'flex';
+    }
+    renderCalendar();
+  }
+
+  function closeCustomDateModal(e) {
+    const modal = document.getElementById('customDateModal');
+    if (modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    }
+  }
+
+  function navPickerMonth(delta) {
+    pickerCurrentMonth += delta;
+    if (pickerCurrentMonth < 0) {
+      pickerCurrentMonth = 11;
+      pickerCurrentYear--;
+    } else if (pickerCurrentMonth > 11) {
+      pickerCurrentMonth = 0;
+      pickerCurrentYear++;
+    }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const monthLabel = document.getElementById('calCurrentMonthLabel');
+    const yearHeading = document.getElementById('calYearHeading');
+    const mainHeading = document.getElementById('calMainHeading');
+    const grid = document.getElementById('calDaysGrid');
+
+    if (monthLabel) monthLabel.innerText = `${MONTH_NAMES[pickerCurrentMonth]} ${pickerCurrentYear}`;
+    if (yearHeading) yearHeading.innerText = pickerSelectedDate.getFullYear();
+    if (mainHeading) {
+      mainHeading.innerText = `${DAY_NAMES[pickerSelectedDate.getDay()]}, ${MONTH_NAMES[pickerSelectedDate.getMonth()].slice(0, 3)} ${pickerSelectedDate.getDate()}`;
+    }
+
+    const firstDayIndex = new Date(pickerCurrentYear, pickerCurrentMonth, 1).getDay();
+    const daysInMonth = new Date(pickerCurrentYear, pickerCurrentMonth + 1, 0).getDate();
+
+    let cellsHtml = '';
+    for (let i = 0; i < firstDayIndex; i++) {
+      cellsHtml += `<div class="cal-cell empty"></div>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isSel = (
+        pickerSelectedDate.getFullYear() === pickerCurrentYear &&
+        pickerSelectedDate.getMonth() === pickerCurrentMonth &&
+        pickerSelectedDate.getDate() === d
+      );
+      cellsHtml += `<div class="cal-cell ${isSel ? 'selected' : ''}" onclick="selectPickerDay(${d})">${d}</div>`;
+    }
+    if (grid) grid.innerHTML = cellsHtml;
+  }
+
+  function selectPickerDay(day) {
+    pickerSelectedDate = new Date(pickerCurrentYear, pickerCurrentMonth, day);
+    renderCalendar();
+  }
+
+  function applyCustomDate() {
+    const y = pickerSelectedDate.getFullYear();
+    const m = String(pickerSelectedDate.getMonth() + 1).padStart(2, '0');
+    const d = String(pickerSelectedDate.getDate()).padStart(2, '0');
+    
+    const isoDate = `${y}-${m}-${d}`;
+    const formatted = `${d}/${m}/${y}`;
+
+    document.getElementById('txDateInput').value = isoDate;
+    document.getElementById('dateDisplayLabel').innerText = formatted;
+    closeCustomDateModal();
+  }
+
+  function openCustomTimePicker() {
+    initTimeMinuteOptions();
+    const hrSelect = document.getElementById('timeHourSelect');
+    const mnSelect = document.getElementById('timeMinSelect');
+    if (hrSelect) hrSelect.value = pickerHour;
+    if (mnSelect) mnSelect.value = pickerMinute;
+    setTimeAmPm(pickerAmPm);
+
+    const modal = document.getElementById('customTimeModal');
+    if (modal) {
+      modal.classList.add('show');
+      modal.style.display = 'flex';
+    }
+    updateTimePreview();
+  }
+
+  function closeCustomTimeModal(e) {
+    const modal = document.getElementById('customTimeModal');
+    if (modal) {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+    }
+  }
+
+  function setTimeAmPm(val) {
+    pickerAmPm = val;
+    const btnAm = document.getElementById('btnAm');
+    const btnPm = document.getElementById('btnPm');
+    if (btnAm) btnAm.className = `ampm-btn ${val === 'AM' ? 'active' : ''}`;
+    if (btnPm) btnPm.className = `ampm-btn ${val === 'PM' ? 'active' : ''}`;
+    updateTimePreview();
+  }
+
+  function updateTimePreview() {
+    const hr = document.getElementById('timeHourSelect')?.value || '05';
+    const mn = document.getElementById('timeMinSelect')?.value || '31';
+    pickerHour = hr;
+    pickerMinute = mn;
+    const preview = document.getElementById('timeHeaderPreview');
+    if (preview) preview.innerText = `${hr}:${mn} ${pickerAmPm}`;
+  }
+
+  function txDisplayTitle(tx) {
+    return tx.title || (tx.category ? catLabel(tx.category) : (tx.type === 'income' ? tr('income') : tr('expense')));
+  }
+
+  function formatTxTime(t24) {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(t24 || '');
+    if (!m) return '';
+    let h = parseInt(m[1], 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}:${m[2]} ${ampm}`;
+  }
+
+  function applyCustomTime() {
+    updateTimePreview();
+    const display = `${pickerHour}:${pickerMinute} ${pickerAmPm}`;
+    const displayEl = document.getElementById('timeDisplayLabel');
+    if (displayEl) displayEl.innerText = display;
+    
+    let hours24 = parseInt(pickerHour, 10);
+    if (pickerAmPm === 'PM' && hours24 < 12) hours24 += 12;
+    if (pickerAmPm === 'AM' && hours24 === 12) hours24 = 0;
+    
+    const hiddenInput = document.getElementById('txTimeInput');
+    if (hiddenInput) {
+      hiddenInput.value = `${String(hours24).padStart(2, '0')}:${pickerMinute}`;
+    }
+    closeCustomTimeModal();
+  }
+
+  // Category definitions (defaults; edits are saved in appState.categories)
+  const OLD_DEFAULT_CATEGORIES = [
+    { name: 'খাবার', icon: '🍽️' },
+    { name: 'মুদি বাজার', icon: '🛒' },
+    { name: 'প্রযুক্তি', icon: '💻' },
+    { name: 'বিল', icon: '⚡' },
+    { name: 'শপিং', icon: '🛍️' },
+    { name: 'ভ্রমণ', icon: '✈️' },
+    { name: 'চিকিৎসা', icon: '💊' },
+    { name: 'বেতন', icon: '💰' }
+  ];
+  const DEFAULT_CATEGORIES = OLD_DEFAULT_CATEGORIES.filter(c => c.icon !== '💻');
+  const CAT_PALETTE = ['#10b981', '#06b6d4', '#a855f7', '#f43f5e', '#f59e0b', '#3b82f6', '#ec4899', '#84cc16'];
+  let catEditMode = false;
+  let catEditIndex = -1; // -1 = adding a new category
+
+  function getCategories() {
+    const fresh = () => DEFAULT_CATEGORIES.map(c => ({ name: c.name, icon: c.icon }));
+    if (!Array.isArray(appState.categories) || appState.categories.length === 0) {
+      appState.categories = fresh();
+      appState.catsV = 3;
+    } else if (appState.catsV !== 3) {
+      const untouched = appState.categories.length === OLD_DEFAULT_CATEGORIES.length &&
+        appState.categories.every((c, i) => c.name === OLD_DEFAULT_CATEGORIES[i].name && c.icon === OLD_DEFAULT_CATEGORIES[i].icon);
+      if (untouched) {
+        appState.categories = fresh();
+      } else {
+        // drop the auto-added "others" category from the previous version
+        appState.categories = appState.categories.filter(c => !(c.name === 'অন্যান্য' && c.icon === '📦'));
+        if (appState.categories.length === 0) appState.categories = fresh();
+      }
+      appState.catsV = 3;
+    }
+    return appState.categories;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  function categoryIconMap() {
+    const map = {};
+    getCategories().forEach(c => { map[c.name] = c.icon; });
+    return map;
+  }
+
+  // Default pick: first category for expense, last default (salary) for income
+  function pickDefaultCat(type) {
+    const cats = getCategories();
+    const salary = DEFAULT_CATEGORIES.find(c => c.icon === '💰') || DEFAULT_CATEGORIES[0];
+    const wanted = type === 'income' ? salary.name : DEFAULT_CATEGORIES[0].name;
+    return (cats.find(c => c.name === wanted) || cats[0]).name;
+  }
+
+  function renderCategoryChips(selectedCat) {
+    const container = document.getElementById('categoryChipsContainer');
+    if (!container) return;
+    const cats = getCategories();
+    const current = selectedCat || document.getElementById('txCategory')?.value || cats[0].name;
+
+    container.innerHTML = cats.map((cat, i) => `
+      <div class="cat-chip-btn ${cat.name === current ? 'selected' : ''}" onclick="selectCategoryByIndex(${i})">
+        <span class="cat-chip-icon">${escHtml(cat.icon)}</span>
+        <span class="cat-chip-name">${escHtml(catLabel(cat.name))}</span>
+      </div>
+    `).join('') + `
+      <div class="cat-chip-btn tool" onclick="openCatManager()">
+        <span class="cat-chip-icon">✏️</span>
+        <span class="cat-chip-name">${tr('more')}</span>
+      </div>`;
+  }
+
+  function selectCategory(catName) {
+    const input = document.getElementById('txCategory');
+    if (input) input.value = catName;
+    renderCategoryChips(catName);
+  }
+
+  function selectCategoryByIndex(i) {
+    const cat = getCategories()[i];
+    if (cat) selectCategory(cat.name);
+  }
+
+  function toggleCatEdit() {
+    catEditMode = !catEditMode;
+    renderCategoryChips();
+  }
+
+  function renderCatManager() {
+    const list = document.getElementById('catManageList');
+    if (!list) return;
+    list.innerHTML = getCategories().map((c, i) => `
+      <div class="cat-manage-row" onclick="openCatEditor(${i})">
+        <span class="cat-manage-icon">${escHtml(c.icon)}</span>
+        <span class="cat-manage-name">${escHtml(catLabel(c.name))}</span>
+        <span class="cat-manage-pen">✎</span>
+        <button type="button" class="cat-manage-del" onclick="event.stopPropagation(); deleteCategory(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function openCatManager() {
+    renderCatManager();
+    const modal = document.getElementById('catManageModal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeCatManager() {
+    const modal = document.getElementById('catManageModal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    }
+    renderCategoryChips();
+  }
+
+  function openCatEditor(i) {
+    catEditIndex = i;
+    const cat = i >= 0 ? getCategories()[i] : null;
+    document.getElementById('catEditTitle').innerText = cat ? tr('editCategory') : tr('newCategory');
+    document.getElementById('catEditName').value = cat ? catLabel(cat.name) : '';
+    document.getElementById('catEditIcon').value = cat ? cat.icon : '🏷️';
+    const modal = document.getElementById('catEditModal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function closeCatEditor() {
+    const modal = document.getElementById('catEditModal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    }
+  }
+
+  function saveCatEditor() {
+    let name = document.getElementById('catEditName').value.trim();
+    if (catEditIndex >= 0 && name === catLabel(getCategories()[catEditIndex].name)) name = getCategories()[catEditIndex].name;
+    let icon = Array.from(document.getElementById('catEditIcon').value.trim()).slice(0, 8).join('');
+    if (!icon) icon = '🏷️';
+    if (!name) {
+      triggerToast('ক্যাটাগরির নাম লিখুন');
+      return;
+    }
+    const cats = getCategories();
+    if (cats.some((c, idx) => idx !== catEditIndex && (c.name === name || catLabel(c.name) === name))) {
+      triggerToast('এই নামে ক্যাটাগরি আগে থেকেই আছে');
+      return;
+    }
+    if (catEditIndex >= 0) {
+      const oldName = cats[catEditIndex].name;
+      cats[catEditIndex] = { name, icon };
+      if (oldName !== name) {
+        appState.transactions.forEach(t => { if (t.category === oldName) t.category = name; });
+        const input = document.getElementById('txCategory');
+        if (input && input.value === oldName) input.value = name;
+      }
+    } else {
+      cats.push({ name, icon });
+    }
+    persist();
+    renderCategoryChips();
+    renderCatManager();
+    closeCatEditor();
+  }
+
+  function deleteCategory(i) {
+    const cats = getCategories();
+    if (cats.length <= 1) {
+      triggerToast('অন্তত একটি ক্যাটাগরি রাখতে হবে');
+      return;
+    }
+    const removed = cats.splice(i, 1)[0];
+    const input = document.getElementById('txCategory');
+    if (input && removed && input.value === removed.name) input.value = cats[0].name;
+    persist();
+    renderCategoryChips();
+    renderCatManager();
+    triggerToast('ক্যাটাগরি মুছে ফেলা হয়েছে');
+  }
+
+  window.selectCategory = selectCategory;
+  window.selectCategoryByIndex = selectCategoryByIndex;
+  window.toggleCatEdit = toggleCatEdit;
+  window.openCatEditor = openCatEditor;
+  window.openCatManager = openCatManager;
+  window.closeCatManager = closeCatManager;
+  window.closeCatEditor = closeCatEditor;
+  window.saveCatEditor = saveCatEditor;
+  window.deleteCategory = deleteCategory;
+
+  // Force mobile keyboard to hide completely on Enter / Submit
+  function dismissMobileKeyboard(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const input = document.getElementById('txAmountInput');
+    if (input) {
+      // Temporarily disabling the element forces Android / iOS soft-keyboard to close immediately
+      input.blur();
+      input.setAttribute('disabled', 'true');
+      setTimeout(() => {
+        input.removeAttribute('disabled');
+      }, 50);
+    }
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+    return false;
+  }
+
+  function checkEnterKey(e) {
+    if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13) {
+      e.preventDefault();
+      dismissMobileKeyboard(e);
+      return false;
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem('hisab_wallet_sar_bdt_v1', JSON.stringify(appState));
+    } catch (e) {}
+    renderApp();
+  }
+
+  function triggerToast(text) {
+    // পপআপ বার্তা বন্ধ করা হয়েছে
+  }
+
+  function navigateToTab(tabName) {
+    document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item-btn').forEach(el => el.classList.remove('active'));
+
+    const targetTab = document.getElementById(`tab-${tabName}`);
+    if (targetTab) targetTab.classList.add('active');
+
+    const targetBtn = document.getElementById(`btn-tab-${tabName}`);
+    if (targetBtn) targetBtn.classList.add('active');
+  }
+
+  function toggleCurrencyMode() {
+    appState.primaryCurrency = appState.primaryCurrency === 'SAR' ? 'BDT' : 'SAR';
+    persist();
+    triggerToast(`প্রদর্শন কারেন্সি: ${appState.primaryCurrency}`);
+  }
+
+  function saveRateSetting() {
+    const inp = document.getElementById('settingRateInput');
+    const num = parseFloat(inp.value);
+    if (!(num >= 10 && num <= 100)) {
+      flashLabel('btnSaveRate', 'badRate', 'save');
+      return;
+    }
+    appState.exchangeRate = Math.round(num * 10000) / 10000;
+    manualRateHold = true;
+    inp.blur();
+    persist();
+    flashLabel('btnSaveRate', 'saved', 'save');
+  }
+
+  // ===== Live SAR → BDT rate (silent, background) =====
+  const RATE_REFRESH_MS = 5 * 60 * 1000;
+  let rateFetching = false;
+  let manualRateHold = false; // set when the user types a rate by hand; resets on reload
+
+  async function fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ms || 8000);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  const RATE_SOURCES = [
+    async () => (await (await fetchWithTimeout('https://open.er-api.com/v6/latest/SAR')).json()).rates.BDT,
+    async () => (await (await fetchWithTimeout('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/sar.json')).json()).sar.bdt
+  ];
+
+  async function refreshLiveRate(force) {
+    if (rateFetching || (manualRateHold && !force)) return false;
+    rateFetching = true;
+    for (const fn of RATE_SOURCES) {
+      try {
+        const r = Number(await fn());
+        if (r > 10 && r < 100) {
+          appState.exchangeRate = Math.round(r * 10000) / 10000;
+          rateFetching = false;
+          persist();
+          return true;
+        }
+      } catch (e) { /* try next source */ }
+    }
+    rateFetching = false;
+    return false;
+  }
+
+  async function refreshLiveRateNow() {
+    const btn = document.getElementById('btnLiveRate');
+    if (!btn || btn.classList.contains('busy')) return;
+    btn.classList.add('busy');
+    const label = document.getElementById('liveRateLabel');
+    clearTimeout(label._flashTimer);
+    label.textContent = tr('liveLoading');
+    manualRateHold = false;
+    for (let i = 0; i < 50 && rateFetching; i++) await new Promise(r => setTimeout(r, 200));
+    const ok = await refreshLiveRate(true);
+    btn.classList.remove('busy');
+    flashLabel('liveRateLabel', ok ? 'liveDone' : 'liveFail', 'liveRate');
+  }
+
+  function convertCurrency(amt, fromCur, toCur) {
+    if (fromCur === toCur) return amt;
+    if (fromCur === 'SAR' && toCur === 'BDT') return amt * appState.exchangeRate;
+    if (fromCur === 'BDT' && toCur === 'SAR') return amt / appState.exchangeRate;
+    return amt;
+  }
+
+  function formatMoney(amount, currency) {
+    const sym = `<span class="cur-unit">&nbsp;&nbsp;${currency === 'SAR' ? tr('unitSAR') : tr('unitBDT')}</span>`;
+    return `${Number(amount).toLocaleString(numLoc(), { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false })}${sym}`;
+  }
+
+  // Render Full Application UI
+  function renderApp() {
+    const isSAR = appState.primaryCurrency === 'SAR';
+    const rate = appState.exchangeRate;
+
+    // Header updates
+    const rateTxt = rate.toLocaleString(numLoc(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('cardFxPill').innerText = lang() === 'bn' ? `১ রিয়াল = ${rateTxt} টাকা` : `1 SAR = ${rateTxt} BDT`;
+    const rateInput = document.getElementById('settingRateInput');
+    if (rateInput && document.activeElement !== rateInput) rateInput.value = rate.toFixed(2);
+    const curLine = document.getElementById('rateCurrentLine');
+    if (curLine) curLine.textContent = `${tr('currently')} ${lang() === 'bn' ? '১' : '1'} SAR = ${rateTxt} BDT`;
+
+    const curToggleText = document.getElementById('curToggleText');
+    if (curToggleText) {
+      curToggleText.innerText = isSAR ? '৳' : SAR_SYM;
+    }
+
+    // Consolidated Net Balance Calculation
+    let netSAR = 0;
+    let netBDT = 0;
+
+    appState.accounts.forEach(acc => {
+      if (acc.currency === 'SAR') {
+        netSAR += acc.balance;
+        netBDT += acc.balance * rate;
+      } else {
+        netBDT += acc.balance;
+        netSAR += acc.balance / rate;
+      }
+    });
+
+    const primaryEl = document.getElementById('totalPrimary');
+    const secEl = document.getElementById('totalSecondary');
+
+    if (isSAR) {
+      primaryEl.innerHTML = formatMoney(netSAR, 'SAR');
+      secEl.innerHTML = `${tr('equiv')} ${formatMoney(netBDT, 'BDT')}`;
+    } else {
+      primaryEl.innerHTML = formatMoney(netBDT, 'BDT');
+      secEl.innerHTML = `${tr('equiv')} ${formatMoney(netSAR, 'SAR')}`;
+    }
+
+    // Monthly Inflow & Outflow Calculation
+    let monthInflowSAR = 0;
+    let monthOutflowSAR = 0;
+
+    appState.transactions.forEach(t => {
+      const amtSAR = t.currency === 'SAR' ? t.amount : (t.amount / rate);
+      if (t.type === 'income') monthInflowSAR += amtSAR;
+      if (t.type === 'expense') monthOutflowSAR += amtSAR;
+    });
+
+    const inflowEl = document.getElementById('inflowValue');
+    const outflowEl = document.getElementById('outflowValue');
+
+    if (isSAR) {
+      inflowEl.innerHTML = `+${formatMoney(monthInflowSAR, 'SAR')}`;
+      outflowEl.innerHTML = `-${formatMoney(monthOutflowSAR, 'SAR')}`;
+    } else {
+      inflowEl.innerHTML = `+${formatMoney(monthInflowSAR * rate, 'BDT')}`;
+      outflowEl.innerHTML = `-${formatMoney(monthOutflowSAR * rate, 'BDT')}`;
+    }
+
+    // Render Expense Breakdown & Donut
+    renderBreakdown(isSAR, rate);
+
+    // Render Transactions (Home and Full History)
+    renderTransactions(isSAR, rate);
+    renderFullHistory();
+  }
+
+  function filterTransactions(filterType) {
+    activeHistoryFilter = filterType;
+    ['all', 'expense', 'income'].forEach(f => {
+      const btn = document.getElementById(`filter-${f}`);
+      if (!btn) return;
+      if (f === filterType) {
+        btn.className = 'switch-tab active inc';
+        btn.style.background = '';
+        btn.style.color = '';
+      } else {
+        btn.className = 'switch-tab';
+        btn.style.background = 'var(--bg-card)';
+        btn.style.color = 'var(--text-2)';
+      }
+    });
+    renderFullHistory();
+  }
+
+  function renderFullHistory() {
+    const list = document.getElementById('fullTransactionsList');
+    if (!list) return;
+
+    const isSAR = appState.primaryCurrency === 'SAR';
+    const rate = appState.exchangeRate;
+    const searchTerm = (document.getElementById('txSearchInput')?.value || '').toLowerCase().trim();
+
+    const catIcons = categoryIconMap();
+
+    let filtered = appState.transactions.slice().reverse();
+
+    if (activeHistoryFilter !== 'all') {
+      filtered = filtered.filter(t => t.type === activeHistoryFilter);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(t => 
+        (t.title && t.title.toLowerCase().includes(searchTerm)) ||
+        (t.category && (t.category.toLowerCase().includes(searchTerm) || String(catLabel(t.category)).toLowerCase().includes(searchTerm)))
+      );
+    }
+
+    const countEl = document.getElementById('fullTxCount');
+    if (countEl) countEl.innerText = tr('txCount', filtered.length);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `
+        <div style="text-align:center; padding:36px 16px; color:var(--text-3);">
+          <div style="font-size:32px; margin-bottom:8px;">🔍</div>
+          <p style="font-size:13px;">${tr('noTx')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = filtered.map(tx => {
+      const isExp = tx.type === 'expense';
+      const isInc = tx.type === 'income';
+      const sign = isExp ? '-' : '+';
+      const cls = isInc ? 'inc' : 'exp';
+
+      const account = appState.accounts.find(a => a.id === tx.accountId) || { name: 'ওয়ালেট' };
+      const convertedVal = convertCurrency(tx.amount, tx.currency, tx.currency === 'SAR' ? 'BDT' : 'SAR');
+      const convertedSym = tx.currency === 'SAR' ? 'BDT' : 'SAR';
+
+      return `
+        <div class="tx-row-item" onclick="openEditTxModal('${tx.id}')">
+          <div class="tx-icon-desc">
+            <div class="tx-thumb">${catIcons[tx.category] || '💸'}</div>
+            <div class="tx-meta">
+              <h5>${txDisplayTitle(tx)}</h5>
+              <span>${tx.date}${tx.time ? ' • ' + formatTxTime(tx.time) : ''}</span>
+            </div>
+          </div>
+          <div class="tx-amounts">
+            <div class="tx-primary-num ${cls}">${sign} ${formatMoney(tx.amount, tx.currency)}</div>
+            <div class="tx-secondary-num">≈ ${formatMoney(convertedVal, convertedSym)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderBreakdown(isSAR, rate) {
+    const totals = {};
+    let totalExpenseSAR = 0;
+
+    appState.transactions.forEach(t => {
+      if (t.type === 'expense') {
+        const amtSAR = t.currency === 'SAR' ? t.amount : (t.amount / rate);
+        const key = t.category || 'অন্যান্য';
+        totals[key] = (totals[key] || 0) + amtSAR;
+        totalExpenseSAR += amtSAR;
+      }
+    });
+
+    const centerVal = isSAR ? totalExpenseSAR : totalExpenseSAR * rate;
+    const centerNum = Number(centerVal).toLocaleString(numLoc(), { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false });
+    const centerEl = document.getElementById('donutCenterTotal');
+    centerEl.style.fontSize = centerNum.length > 9 ? '10px' : centerNum.length > 7 ? '12px' : '14px';
+    centerEl.innerHTML = `${centerNum}<small class="donut-unit">${isSAR ? tr('unitSAR') : tr('unitBDT')}</small>`;
+
+    const colors = {
+      'খাবার': '#10b981',
+      'প্রযুক্তি': '#06b6d4',
+      'মুদি বাজার': '#a855f7',
+      'বিল': '#f43f5e',
+      'শপিং': '#f59e0b',
+      'ভ্রমণ': '#3b82f6'
+    };
+
+    Object.keys(totals).forEach((name, i) => {
+      if (!colors[name]) colors[name] = CAT_PALETTE[i % CAT_PALETTE.length];
+    });
+
+    let entries = Object.entries(totals).filter(([_, v]) => v > 0);
+    entries.sort((a, b) => b[1] - a[1]);
+
+    let ringOffset = 0;
+    ['ringSeg1', 'ringSeg2', 'ringSeg3'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const e = entries[i];
+      if (!e || totalExpenseSAR <= 0) {
+        el.setAttribute('stroke-dasharray', '0 100');
+        return;
+      }
+      const pct = (e[1] / totalExpenseSAR) * 100;
+      el.setAttribute('stroke', colors[e[0]] || '#10b981');
+      el.setAttribute('stroke-dasharray', `${pct} ${100 - pct}`);
+      el.setAttribute('stroke-dashoffset', `${-ringOffset}`);
+      ringOffset += pct;
+    });
+
+    const legendEl = document.getElementById('homeBreakdownLegend');
+    legendEl.innerHTML = entries.slice(0, 3).map(([cat, amt]) => {
+      const valStr = isSAR ? formatMoney(amt, 'SAR') : formatMoney(amt * rate, 'BDT');
+      return `
+        <div class="legend-row">
+          <div class="legend-title">
+            <div class="legend-indicator" style="background:${colors[cat] || '#10b981'};"></div>
+            <span>${catLabel(cat)}</span>
+          </div>
+          <div class="legend-value">${valStr}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Analytics Progress Bars
+    const analyticsBars = document.getElementById('analyticsProgressBars');
+    analyticsBars.innerHTML = entries.map(([cat, amt]) => {
+      const pct = totalExpenseSAR > 0 ? ((amt / totalExpenseSAR) * 100).toFixed(1) : 0;
+      const valStr = isSAR ? formatMoney(amt, 'SAR') : formatMoney(amt * rate, 'BDT');
+      return `
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+            <span style="font-weight:600;">${catLabel(cat)}</span>
+            <span style="font-family:'JetBrains Mono'; color:var(--text-2);">${pct}% (${valStr})</span>
+          </div>
+          <div style="height:7px; border-radius:4px; background:#1b273a; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:${colors[cat] || '#10b981'}; border-radius:4px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTransactions(isSAR, rate) {
+    const list = document.getElementById('homeTxFeed');
+    if (!list) return;
+
+    const catIcons = categoryIconMap();
+
+    // Show the most recent 5 transactions on the home feed
+    const recent = appState.transactions.slice().reverse().slice(0, 5);
+
+    if (recent.length === 0) {
+      list.innerHTML = `
+        <div style="text-align:center; padding:24px 16px; color:var(--text-3); font-size:13px; background:var(--bg-surface); border-radius:16px; border:1px solid var(--border-subtle);">
+          ${tr('noTxYet')}
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = recent.map(tx => {
+      const isExp = tx.type === 'expense';
+      const isInc = tx.type === 'income';
+      const sign = isExp ? '-' : '+';
+      const cls = isInc ? 'inc' : 'exp';
+
+      const account = appState.accounts.find(a => a.id === tx.accountId) || { name: 'ওয়ালেট' };
+      const convertedVal = convertCurrency(tx.amount, tx.currency, tx.currency === 'SAR' ? 'BDT' : 'SAR');
+      const convertedSym = tx.currency === 'SAR' ? 'BDT' : 'SAR';
+
+      return `
+        <div class="tx-row-item" onclick="openEditTxModal('${tx.id}')">
+          <div class="tx-icon-desc">
+            <div class="tx-thumb">${catIcons[tx.category] || '💸'}</div>
+            <div class="tx-meta">
+              <h5>${txDisplayTitle(tx)}</h5>
+              <span>${tx.date}${tx.time ? ' • ' + formatTxTime(tx.time) : ''}</span>
+            </div>
+          </div>
+          <div class="tx-amounts">
+            <div class="tx-primary-num ${cls}">${sign}&nbsp;${formatMoney(tx.amount, tx.currency)}</div>
+            <div class="tx-secondary-num">≈&nbsp;${formatMoney(convertedVal, convertedSym)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Modal Dialog Handlers
+  function openCreateModal() {
+    editingTxId = null;
+    document.getElementById('btnSubmitTx').innerText = tr('saveRecord');
+    const delBtn = document.getElementById('btnDeleteTx');
+    if (delBtn) delBtn.style.display = 'none';
+
+    // Set today's date and current time by default
+    const now = new Date();
+    pickerSelectedDate = now;
+    pickerCurrentYear = now.getFullYear();
+    pickerCurrentMonth = now.getMonth();
+
+    let rawHr = now.getHours();
+    pickerAmPm = rawHr >= 12 ? 'PM' : 'AM';
+    let hr12 = rawHr % 12;
+    if (hr12 === 0) hr12 = 12;
+    pickerHour = String(hr12).padStart(2, '0');
+    pickerMinute = String(now.getMinutes()).padStart(2, '0');
+
+    applyCustomDate();
+    initTimeMinuteOptions();
+    const hrSelect = document.getElementById('timeHourSelect');
+    const mnSelect = document.getElementById('timeMinSelect');
+    if (hrSelect) hrSelect.value = pickerHour;
+    if (mnSelect) mnSelect.value = pickerMinute;
+    setTimeAmPm(pickerAmPm);
+    applyCustomTime();
+
+    // Default category & chip rendering
+    catEditMode = false;
+    selectCategory(pickDefaultCat('expense'));
+
+    const modal = document.getElementById('addTxModal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function openEditTxModal(txId) {
+    const tx = appState.transactions.find(t => t.id === txId);
+    if (!tx) return;
+
+    editingTxId = txId;
+    setTxType(tx.type);
+
+    document.getElementById('txAmountInput').value = tx.amount;
+    document.getElementById('txNoteInput').value = (tx.title && tx.title !== tx.category && tx.title !== 'আয়') ? tx.title : '';
+    catEditMode = false;
+    selectCategory(tx.category || pickDefaultCat('expense'));
+
+    // Parse date
+    if (tx.date) {
+      const parts = tx.date.split('-');
+      if (parts.length === 3) {
+        pickerCurrentYear = parseInt(parts[0], 10);
+        pickerCurrentMonth = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        pickerSelectedDate = new Date(pickerCurrentYear, pickerCurrentMonth, d);
+        applyCustomDate();
+      }
+    }
+
+    // Parse time
+    if (tx.time) {
+      const tm = /^(\d{1,2}):(\d{2})$/.exec(tx.time);
+      if (tm) {
+        const h24 = parseInt(tm[1], 10);
+        pickerAmPm = h24 >= 12 ? 'PM' : 'AM';
+        pickerHour = String(h24 % 12 || 12).padStart(2, '0');
+        pickerMinute = tm[2];
+        initTimeMinuteOptions();
+        const hrSel = document.getElementById('timeHourSelect');
+        const mnSel = document.getElementById('timeMinSelect');
+        if (hrSel) hrSel.value = pickerHour;
+        if (mnSel) mnSel.value = pickerMinute;
+        setTimeAmPm(pickerAmPm);
+        applyCustomTime();
+      }
+    }
+
+    // Set submit button text & show delete button
+    document.getElementById('btnSubmitTx').innerText = tr('saveChanges');
+    const delBtn = document.getElementById('btnDeleteTx');
+    if (delBtn) delBtn.style.display = 'flex';
+
+    const modal = document.getElementById('addTxModal');
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  }
+
+  function deleteCurrentTransaction() {
+    if (!editingTxId) return;
+    const idx = appState.transactions.findIndex(t => t.id === editingTxId);
+    if (idx === -1) return;
+
+    const tx = appState.transactions[idx];
+    const targetAcc = appState.accounts.find(a => a.id === tx.accountId) || appState.accounts[0];
+
+    // Reverse the balance impact
+    if (targetAcc) {
+      if (tx.type === 'expense') {
+        targetAcc.balance += tx.amount;
+      } else if (tx.type === 'income') {
+        targetAcc.balance -= tx.amount;
+      }
+    }
+
+    appState.transactions.splice(idx, 1);
+    closeCreateModal();
+    persist();
+    triggerToast('লেনদেন মুছে ফেলা হয়েছে');
+  }
+
+  function closeCreateModal() {
+    editingTxId = null;
+    const modal = document.getElementById('addTxModal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    }
+    const amtInput = document.getElementById('txAmountInput');
+    const noteInput = document.getElementById('txNoteInput');
+    if (amtInput) amtInput.value = '';
+    if (noteInput) noteInput.value = '';
+    const delBtn = document.getElementById('btnDeleteTx');
+    if (delBtn) delBtn.style.display = 'none';
+  }
+
+  // Expose handlers globally to ensure no onclick reference issues
+  window.openCreateModal = openCreateModal;
+  window.openEditTxModal = openEditTxModal;
+  window.deleteCurrentTransaction = deleteCurrentTransaction;
+  window.closeCreateModal = closeCreateModal;
+  window.dismissMobileKeyboard = dismissMobileKeyboard;
+  window.checkEnterKey = checkEnterKey;
+  window.openCustomDatePicker = openCustomDatePicker;
+  window.closeCustomDateModal = closeCustomDateModal;
+  window.openCustomTimePicker = openCustomTimePicker;
+  window.closeCustomTimeModal = closeCustomTimeModal;
+  window.saveNewTransaction = saveNewTransaction;
+  window.setTxType = setTxType;
+  window.selectCategory = selectCategory;
+  window.navigateToTab = navigateToTab;
+  window.toggleCurrencyMode = toggleCurrencyMode;
+
+  function handleModalOutsideClick(e) {
+    if (e.target && e.target.id === 'addTxModal') {
+      closeCreateModal();
+    }
+  }
+
+  function setTxType(type) {
+    activeTxType = type;
+    document.getElementById('btnTypeExp').className = 'switch-tab' + (type === 'expense' ? ' active exp' : '');
+    document.getElementById('btnTypeInc').className = 'switch-tab' + (type === 'income' ? ' active inc' : '');
+
+    // Default to 'বেতন' on income, otherwise 'খাবার'
+    selectCategory(pickDefaultCat(type));
+  }
+
+  function saveNewTransaction() {
+    const amt = parseFloat(document.getElementById('txAmountInput').value);
+    const note = document.getElementById('txNoteInput').value.trim();
+    const cat = document.getElementById('txCategory').value || 'অন্যান্য';
+    const txDate = document.getElementById('txDateInput')?.value || new Date().toISOString().split('T')[0];
+    const nowD = new Date();
+    const txTime = document.getElementById('txTimeInput')?.value || `${String(nowD.getHours()).padStart(2, '0')}:${String(nowD.getMinutes()).padStart(2, '0')}`;
+
+    if (!amt || isNaN(amt) || amt <= 0) {
+      alert(tr('invalidAmount'));
+      return;
+    }
+
+    // Editing an existing transaction
+    if (editingTxId) {
+      const existing = appState.transactions.find(t => t.id === editingTxId);
+      if (existing) {
+        const acc = appState.accounts.find(a => a.id === existing.accountId) || appState.accounts[0];
+        // Revert old transaction amount
+        if (acc) {
+          if (existing.type === 'expense') acc.balance += existing.amount;
+          if (existing.type === 'income') acc.balance -= existing.amount;
+        }
+
+        // Apply updated details
+        existing.amount = amt;
+        existing.type = activeTxType;
+        existing.category = cat;
+        existing.title = note;
+        existing.date = txDate;
+        existing.time = txTime;
+
+        // Apply new balance
+        if (acc) {
+          if (existing.type === 'expense') acc.balance -= amt;
+          if (existing.type === 'income') acc.balance += amt;
+        }
+
+        closeCreateModal();
+        persist();
+        triggerToast('লেনদেন সফলভাবে আপডেট করা হয়েছে');
+        return;
+      }
+    }
+
+    // Automatically select the active primary currency account
+    const primaryCurrency = appState.primaryCurrency || 'SAR';
+    let targetAcc = appState.accounts.find(a => a.currency === primaryCurrency);
+    if (!targetAcc) {
+      targetAcc = appState.accounts[0];
+    }
+    if (!targetAcc) return;
+
+    if (activeTxType === 'expense') {
+      targetAcc.balance -= amt;
+      appState.transactions.push({
+        id: 'tx-' + Date.now(),
+        title: note,
+        category: cat,
+        type: 'expense',
+        amount: amt,
+        currency: targetAcc.currency,
+        accountId: targetAcc.id,
+        date: txDate,
+        time: txTime
+      });
+    } else if (activeTxType === 'income') {
+      targetAcc.balance += amt;
+      appState.transactions.push({
+        id: 'tx-' + Date.now(),
+        title: note,
+        category: cat || 'বেতন',
+        type: 'income',
+        amount: amt,
+        currency: targetAcc.currency,
+        accountId: targetAcc.id,
+        date: txDate,
+        time: txTime
+      });
+    }
+
+    closeCreateModal();
+    persist();
+    triggerToast('লেনদেন সফলভাবে সংরক্ষিত হয়েছে');
+  }
+
+  function addNewAccountDialog() {
+    const name = prompt('ওয়ালেট বা ব্যাংকের নাম লিখুন:');
+    if (!name) return;
+    const cur = prompt('কারেন্সি নির্বাচন করুন (SAR অথবা BDT):', 'SAR').toUpperCase();
+    if (cur !== 'SAR' && cur !== 'BDT') {
+      alert('শুধুমাত্র SAR এবং BDT সমর্থিত');
+      return;
+    }
+    const bal = parseFloat(prompt('প্রাথমিক ব্যালেন্স:', '0')) || 0;
+
+    appState.accounts.push({
+      id: 'acc-' + Date.now(),
+      name: name,
+      currency: cur,
+      balance: bal,
+      icon: cur === 'SAR' ? '💳' : '🏦'
+    });
+
+    persist();
+    triggerToast('নতুন ওয়ালেট যোগ করা হয়েছে');
+  }
+
+  // Backup & Restore
+  function exportDataJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+    const dl = document.createElement('a');
+    dl.setAttribute("href", dataStr);
+    dl.setAttribute("download", `open_wallet_backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(dl);
+    dl.click();
+    dl.remove();
+  }
+
+  async function shareBackupJSON() {
+    const text = JSON.stringify(appState, null, 2);
+    // 1) native share sheet (it has its own "Copy" option on phones)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'OPEN WALLET backup', text });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // user just closed the sheet
+      }
+    }
+    // 2) copy to clipboard
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch (e) { /* try the older way */ }
+    if (!copied) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        copied = document.execCommand('copy');
+        ta.remove();
+      } catch (e) { /* fall through */ }
+    }
+    if (copied) {
+      flashLabel('shareBackupLabel', 'copied', 'shareBackup');
+      return;
+    }
+    // 3) last resort: download as a file
+    exportDataJSON();
+  }
+
+  function openRestoreModal() {
+    const modal = document.getElementById('restoreModal');
+    document.getElementById('restoreText').value = '';
+    document.getElementById('restoreMsg').textContent = '';
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+  }
+
+  function closeRestoreModal() {
+    const modal = document.getElementById('restoreModal');
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+  }
+
+  function applyBackupText(text) {
+    try {
+      const loaded = JSON.parse(text);
+      if (loaded && Array.isArray(loaded.accounts) && Array.isArray(loaded.transactions)) {
+        if (!(loaded.exchangeRate >= 10 && loaded.exchangeRate <= 100)) loaded.exchangeRate = appState.exchangeRate;
+        if (!loaded.primaryCurrency) loaded.primaryCurrency = appState.primaryCurrency;
+        loaded.lang = appState.lang; // keep the language that is currently selected
+        appState = loaded;
+        persist();
+        return null;
+      }
+      return 'invalidBackup';
+    } catch (err) {
+      return 'readError';
+    }
+  }
+
+  function finishRestore(errKey) {
+    const msg = document.getElementById('restoreMsg');
+    if (errKey) {
+      msg.textContent = tr(errKey);
+      return;
+    }
+    closeRestoreModal();
+    flashLabel('restoreBtnLabel', 'restored', 'restoreBtn');
+  }
+
+  function restoreFromText() {
+    const text = document.getElementById('restoreText').value.trim();
+    if (!text) {
+      document.getElementById('restoreMsg').textContent = tr('emptyBackup');
+      return;
+    }
+    finishRestore(applyBackupText(text));
+  }
+
+  function importDataJSON(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      finishRestore(applyBackupText(String(evt.target.result || '')));
+      e.target.value = '';
+    };
+    reader.onerror = function() {
+      document.getElementById('restoreMsg').textContent = tr('readError');
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  let resetArmed = false;
+  let resetTimer = null;
+  function resetToDefaultData() {
+    const btn = document.getElementById('btnResetData');
+    if (!resetArmed) {
+      // প্রথম ক্লিক: নিশ্চিতকরণ চাওয়া (ব্রাউজার পপআপ ছাড়া)
+      resetArmed = true;
+      if (btn) {
+        btn.textContent = tr('resetConfirm');
+        btn.style.background = 'rgba(244,63,94,0.2)';
+      }
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        resetArmed = false;
+        if (btn) {
+          btn.textContent = tr('reset');
+          btn.style.background = '';
+        }
+      }, 4000);
+      return;
+    }
+    // দ্বিতীয় ক্লিক: ডেটা মুছে ফেলা
+    clearTimeout(resetTimer);
+    resetArmed = false;
+    if (btn) {
+      btn.textContent = tr('reset');
+      btn.style.background = '';
+    }
+    appState.transactions = [];
+    appState.accounts.forEach(acc => { acc.balance = 0; });
+    persist();
+  }
+  window.resetToDefaultData = resetToDefaultData;
+
+  // Auto initialize
+  renderApp();
+  applyLanguageUI();
+
+  // Live rate: fetched AFTER first paint so the app opens instantly
+  const _afterPaint = window.requestIdleCallback ? (f => requestIdleCallback(f, { timeout: 1500 })) : (f => setTimeout(f, 600));
+  _afterPaint(() => refreshLiveRate());
+  setInterval(() => refreshLiveRate(), RATE_REFRESH_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshLiveRate();
+  });
+  window.addEventListener('online', () => refreshLiveRate());
+</script>
+</body>
+</html>

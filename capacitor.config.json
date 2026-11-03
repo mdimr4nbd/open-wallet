@@ -1,0 +1,9 @@
+{
+  "appId": "com.imran.openwallet",
+  "appName": "OPEN WALLET",
+  "webDir": "www",
+  "backgroundColor": "#06090e",
+  "android": {
+    "backgroundColor": "#06090e"
+  }
+}
