@@ -27,6 +27,32 @@ jobs:
       - run: npx cap add android
       - run: npx capacitor-assets generate --android
       - run: npx cap sync android
+      - name: Make launch screen same color as app (no gray/black flash)
+        run: |
+          mkdir -p android/app/src/main/res/values
+          cat > android/app/src/main/res/values/ow_colors.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="ow_bg">#06090e</color>
+          </resources>
+          XML
+          python3 - <<'PY'
+          import re
+          p = 'android/app/src/main/res/values/styles.xml'
+          s = open(p, encoding='utf-8').read()
+          def fix(m):
+              head, name, body, tail = m.group(1), m.group(2), m.group(3), m.group(4)
+              body = re.sub(r'\s*<item name="android:windowBackground">.*?</item>', '', body)
+              items = '\n        <item name="android:windowBackground">@color/ow_bg</item>'
+              items += '\n        <item name="android:colorBackground">@color/ow_bg</item>'
+              items += '\n        <item name="android:windowSplashScreenBackground">@color/ow_bg</item>'
+              if 'SplashScreen' in head:
+                  items += '\n        <item name="windowSplashScreenBackground">@color/ow_bg</item>'
+              return head + body + items + '\n    ' + tail
+          s = re.sub(r'(<style name="(AppTheme\.NoActionBar(?:Launch)?)"[^>]*>)(.*?)(</style>)', fix, s, flags=re.S)
+          open(p, 'w', encoding='utf-8').write(s)
+          print(s)
+          PY
       - name: Build APK
         run: |
           cd android
